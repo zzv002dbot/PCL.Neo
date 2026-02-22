@@ -3,8 +3,7 @@ name: Build Linux x64
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: ["main"]
 
 jobs:
   build-linux-x64:
@@ -17,30 +16,32 @@ jobs:
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: '8.0.x'
 
-      - name: Install dependencies
+      - name: Install deps
         run: |
           sudo apt-get update
           sudo apt-get install -y fuse libfuse2
           dotnet tool install -g KuiperZone.PupNet
           echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+          cd $GITHUB_WORKSPACE
+          curl -sL https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -o appimagetool-x86_64.AppImage
+          chmod +x appimagetool-x86_64.AppImage
+          echo "$GITHUB_WORKSPACE" >> $GITHUB_PATH
 
-      - name: Clean project
+      - name: Clean & Restore
         run: |
           cd PCL.Neo
           dotnet clean
-          rm -rf bin obj
+          rm -rf bin obj Deploy
           dotnet restore
 
       - name: Build AppImage
         run: |
           cd PCL.Neo
-          pupnet --runtime linux-x64 --kind appimage \
-            -o PCL.Neo.linux.x64.AppImage \
-            -y --app-version 1.0.0
+          pupnet --runtime linux-x64 --kind appimage -o PCL.Neo.linux.x64.AppImage -y --app-version 1.0.0
 
-      - name: Upload artifact
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: linux-x64

@@ -1,46 +1,47 @@
 name: Build Linux x64
 
 on:
-workflow_dispatch:
-push:
-branches: ["main"]
+  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
-build-linux-x64:
-runs-on: ubuntu-22.04
+  build-linux-x64:
+    runs-on: ubuntu-22.04
 
-steps:
-  - name: Checkout
-    uses: actions/checkout@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-  - name: Setup .NET 8
-    uses: actions/setup-dotnet@v4
-    with:
-      dotnet-version: '8.0.x'
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
 
-  - name: Install dependencies
-    run: |
-      sudo apt-get update
-      sudo apt-get install -y fuse libfuse2
-      dotnet tool install -g KuiperZone.PupNet
-      echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fuse libfuse2
+          dotnet tool install -g KuiperZone.PupNet
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
 
-  - name: Clean project
-    run: |
-      cd PCL.Neo
-      dotnet clean
-      rm -rf bin obj
-      dotnet restore
+      - name: Clean project
+        run: |
+          cd PCL.Neo
+          dotnet clean
+          rm -rf bin obj
+          dotnet restore
 
-  - name: Build AppImage (Linux x64)
-    run: |
-      cd PCL.Neo
-      pupnet --runtime linux-x64 --kind appimage \
-        -o PCL.Neo.linux.x64.AppImage \
-        -y --app-version 1.0.0
+      - name: Build AppImage
+        run: |
+          cd PCL.Neo
+          pupnet --runtime linux-x64 --kind appimage \
+            -o PCL.Neo.linux.x64.AppImage \
+            -y --app-version 1.0.0
 
-  - name: Upload artifact
-    uses: actions/upload-artifact@v4
-    with:
-      name: linux-x64
-      path: PCL.Neo/Deploy/OUT/PCL.Neo.linux.x64.AppImage
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-x64
+          path: PCL.Neo/Deploy/OUT/PCL.Neo.linux.x64.AppImage
